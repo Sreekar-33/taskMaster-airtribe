@@ -139,10 +139,9 @@ exports.updateTask = async (req, res, next) => {
             return res.status(404).json({ error: 'Task not found.' });
         }
 
-        const isCreator = task.creator.toString() === req.user._id.toString();
-        const isAssignee = task.assignee && task.assignee.toString() === req.user._id.toString();
-        if (!isCreator && !isAssignee) {
-            return res.status(403).json({ error: 'You can only update tasks you created or are assigned to.' });
+        const hasAccess = await canAccessTask(task, req.user._id);
+        if (!hasAccess) {
+            return res.status(403).json({ error: 'You can only update tasks you created, are assigned to, or belong to via team.' });
         }
 
         const allowedUpdates = ['title', 'description', 'status', 'priority', 'dueDate', 'assignee', 'tags'];
